@@ -1,0 +1,117 @@
+---
+title: "project"
+output: html_document
+date: "2025-07-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load libraries
+library(tidyverse)
+library(caret)
+library(xgboost)
+library(pROC)
+library(randomForest)
+
+# Load and preprocess data
+data <- read_csv("C:/Users/av1265/Downloads/digital_diet_mental_health.csv")
+
+# Feature engineering
+data <- data %>%
+  mutate(
+    screen_per_hour_awake = daily_screen_time_hours / (24 - sleep_duration_hours),
+    stress_to_sleep_ratio = stress_level / (sleep_duration_hours + 1),
+    screen_stress_ratio = daily_screen_time_hours / (stress_level + 1),
+    caffeine_sleep_ratio = caffeine_intake_mg_per_day / (sleep_duration_hours + 1),
+    digital_exhaustion = (daily_screen_time_hours + phone_usage_hours) * stress_level / (sleep_duration_hours + 1),
+    wellbeing_score = mindfulness_minutes_per_day + physical_activity_hours_per_week - caffeine_intake_mg_per_day,
+    stress_x_screen = stress_level * daily_screen_time_hours
+  ) %>%
+  select(-user_id)
+
+# Filter: burnout < 50, healthy ≥ 70
+filtered <- data %>%
+  filter(mental_health_score < 50 | mental_health_score >= 70) %>%
+  mutate(burnout_class = ifelse(mental_health_score < 50, "burnout", "healthy")) %>%
+  select(-mental_health_score)
+
+# Train/test split
+set.seed(42)
+train_index <- createDataPartition(filtered$burnout_class, p = 0.8, list = FALSE)
+train <- filtered[train_index, ]
+test <- filtered[-train_index, ]
+
+# Features and target
+train_y <- as.factor(train$burnout_class)
+test_y <- as.factor(test$burnout_class)
+train_x <- train %>% select(-burnout_class)
+test_x <- test %>% select(-burnout_class)
+
+# One-hot encode
+dummies <- dummyVars(" ~ .", data = train_x)
+train_x_mat <- as.data.frame(predict(dummies, newdata = train_x))
+test_x_mat <- as.data.frame(predict(dummies, newdata = test_x))
+
+# Remove correlated/low variance features
+cor_matrix <- cor(train_x_mat)
+high_cor <- findCorrelation(cor_matrix, cutoff = 0.85)
+if (length(high_cor) > 0) {
+  train_x_mat <- train_x_mat[, -high_cor]
+  test_x_mat <- test_x_mat[, -high_cor]
+}
+nzv <- nearZeroVar(train_x_mat)
+if (length(nzv) > 0) {
+  train_x_mat <- train_x_mat[, -nzv]
+  test_x_mat <- test_x_mat[, -nzv]
+}
+
+# --------------------------
+# Train individual models
+# --------------------------
+
+# 1. Logistic Regression
+logit_model <- train(
+  x = train_x_mat,
+  y = train_y,
+  method = "glm",
+  trControl = trainControl(method = "cv", number = 3)
+)
+pred_logit <- predict(logit_model, test_x_mat)
+
+# 2. Random Forest
+rf_model <- train(
+  x = train_x_mat,
+  y = train_y,
+  method = "rf",
+  trControl = trainControl(method = "cv", number = 3)
+)
+pred_rf <- predict(rf_model, test_x_mat)
+
+# 3. XGBoost
+xgb_model <- train(
+  x = train_x_mat,
+  y = train_y,
+  method = "xgbTree",
+  trControl = trainControl(method = "cv", number = 3),
+  tuneLength = 3
+)
+pred_xgb <- predict(xgb_model, test_x_mat)
+
+# --------------------------
+# Majority vote ensemble
+# --------------------------
+final_pred <- ifelse(
+  (pred_logit == "burnout") + (pred_rf == "burnout") + (pred_xgb == "burnout") >= 2,
+  "burnout", "healthy"
+)
+
+# Evaluation
+conf_matrix <- confusionMatrix(factor(final_pred, levels = c("healthy", "burnout")),
+                               factor(test_y, levels = c("healthy", "burnout")))
+print(conf_matrix)
+
+```
+
