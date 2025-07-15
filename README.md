@@ -115,6 +115,7 @@ The model uses **XGBoost classification** to predict mental health scores and cl
 - [ ] **SHAP values** for explainable AI predictions
 - [ ] **Mobile app integration** with push notifications
 ```
+```
 ## 👤 Author
 
 **Abhignav Valambatla**  
