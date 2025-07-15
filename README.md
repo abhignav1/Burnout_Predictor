@@ -1,11 +1,10 @@
-# Burnout_Predictor
 # 🧠 Burnout Risk Prediction Using Digital Lifestyle Data
 
 **📌 Overview**
 
 In our hyper-connected world, burnout has become a silent epidemic. This project predicts burnout risk by analyzing digital habits, sleep patterns, and lifestyle behaviors using machine learning. Instead of waiting for burnout to manifest, we can identify at-risk individuals early and intervene proactively.
 
-The model uses **XGBoost regression** to predict mental health scores and classifies users as either "Burnout Risk" or "Healthy" based on their digital behavior patterns.
+The model uses **XGBoost classification** to predict mental health scores and classifies users as either "Burnout Risk" or "Healthy" based on their digital behavior patterns.
 
 ## 🎯 Project Objectives
 
@@ -17,6 +16,7 @@ The model uses **XGBoost regression** to predict mental health scores and classi
 ## 📚 Dataset Details
 
 **Title:** Digital Diet & Mental Health Impact  
+**Source:** Synthetic behavioral dataset  
 **Size:** ~2,000 user observations  
 **Features Include:**
 - `daily_screen_time_hours`, `phone_usage_hours`, `social_media_hours`
@@ -28,31 +28,57 @@ The model uses **XGBoost regression** to predict mental health scores and classi
 
 ### **Data Engineering**
 - Removal of irrelevant identifiers (`user_id`)
-- Custom feature creation for behavioral insights
+- Binary classification: mental_health_score < 50 = "burnout", ≥ 70 = "healthy"
 
 ### **Feature Engineering** 
 - `screen_per_hour_awake` - Screen intensity during waking hours
 - `stress_to_sleep_ratio` - Stress relative to recovery time
-- `digital_exhaustion` - Combined screen time × stress ÷ sleep  
+- `digital_exhaustion` - Combined (screen time + phone use) × stress ÷ sleep  
 - `wellbeing_score` - Mindfulness + activity - caffeine intake
 - `caffeine_sleep_ratio` - Stimulant dependency patterns
 
 ### **Modeling Approach**
-- **XGBoost Classifier** with 300 trees
+- **XGBoost Classifier** with 300 trees, depth=4, learning_rate=0.05
 - One-hot encoding for categorical variables  
-- Normalization of numeric features
-- **Binary Classification:** Mental health score < 50 = "Burnout Risk"
+- Normalization of numeric features using tidymodels recipe
+- 80/20 train-test split with stratified sampling
+
+## 🔄 **Model Workflow**
+
+```
+📊 Raw Data Input           🔧 Feature Engineering         🤖 XGBoost Model
+┌─────────────────┐         ┌─────────────────────┐         ┌─────────────────┐
+│ 📱 Screen Time  │────────▶│ screen_per_hour_awake│────────▶│   300 trees     │
+│ 😴 Sleep Data   │         │ digital_exhaustion   │         │   depth = 4     │
+│ 🏃‍♂️ Activity     │         │ stress_to_sleep_ratio│         │ learn_rate=0.05 │
+│ ☕ Caffeine     │         │ wellbeing_score      │         └─────────────────┘
+│ 📊 Stress       │         └─────────────────────┘                   │
+│ 🧘‍♀️ Mindfulness │                                                   ▼
+└─────────────────┘                                         🎯 Classification
+                                                            ┌─────────────────┐
+🚀 Deployment Pipeline                                      │ "Burnout Risk"  │
+┌─────────────────┐    ┌─────────────────┐                │ vs "Healthy"    │
+│ 📦 Vetiver      │───▶│ 🌐 REST API     │                └─────────────────┘
+│ Model Packaging │    │ Plumber Server  │
+└─────────────────┘    └─────────────────┘
+         │                       │
+         ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐
+│ 🐳 Docker       │    │ 📊 Predictions  │
+│ Container       │    │ & Metadata      │
+└─────────────────┘    └─────────────────┘
+```
 
 ## 🚀 Model Performance
 
 | Metric | Score |
 |--------|-------|
-| **Overall Accuracy** | 72%+ |
-| **Precision** | High burnout detection |
-| **Recall** | Minimal false negatives |
-| **Model Type** | XGBoost Classification |
+| **Overall Accuracy** | 95%+ |
+| **Classification** | Binary (Burnout vs Healthy) |
+| **Evaluation** | Confusion Matrix & Cross-validation |
+| **Validation** | Stratified train-test split |
 
-*Performance evaluated using confusion matrix and cross-validation*
+*Performance evaluated using tidymodels accuracy metrics*
 
 ## 🧩 Key Insights
 
@@ -79,21 +105,23 @@ The model uses **XGBoost regression** to predict mental health scores and classi
 🎯 **Personal Use**
 - Self-monitoring digital habits
 - Lifestyle optimization for better mental health
+```
 
-## 📈 Future Enhancements
+## 📈 Next Steps
 
 - [ ] **Real-time monitoring** via wearable device integration
-- [ ] **Interactive dashboard** for personal wellness tracking  
-- [ ] **Mobile app** with push notifications for interventions
-- [ ] **Multi-language support** for global deployment
-- [ ] **Integration** with existing HR and wellness platforms
+- [ ] **Interactive Shiny dashboard** for personal wellness tracking  
+- [ ] **Feature importance visualization** using XGBoost plots
+- [ ] **SHAP values** for explainable AI predictions
+- [ ] **Mobile app integration** with push notifications
 
 ## 👤 Author
 
 **Abhignav Valambatla**  
-📍 Data Science & Machine Learning  
+M.S. Business Analytics  
+📍 University of New Hampshire, Durham, NH  
 🔗 [LinkedIn](https://www.linkedin.com/in/abhigna-valambatla-0a216a149/) | [GitHub](https://github.com/abhignav1)
 
-
+---
 
 ⚠️ **Important Notice:** This model is designed for research and early intervention purposes. It should complement, not replace, professional mental health assessment and care.
