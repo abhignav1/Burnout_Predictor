@@ -73,7 +73,7 @@ The model uses **XGBoost classification** to predict mental health scores and cl
 
 | Metric | Score |
 |--------|-------|
-| **Overall Accuracy** | 95%+ |
+| **Overall Accuracy** | 82%+ |
 | **Classification** | Binary (Burnout vs Healthy) |
 | **Evaluation** | Confusion Matrix & Cross-validation |
 | **Validation** | Stratified train-test split |
