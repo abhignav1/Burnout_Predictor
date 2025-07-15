@@ -106,7 +106,7 @@ The model uses **XGBoost classification** to predict mental health scores and cl
 - Self-monitoring digital habits
 - Lifestyle optimization for better mental health
 ```
-
+```
 ## 📈 Next Steps
 
 - [ ] **Real-time monitoring** via wearable device integration
@@ -114,7 +114,7 @@ The model uses **XGBoost classification** to predict mental health scores and cl
 - [ ] **Feature importance visualization** using XGBoost plots
 - [ ] **SHAP values** for explainable AI predictions
 - [ ] **Mobile app integration** with push notifications
-
+```
 ## 👤 Author
 
 **Abhignav Valambatla**  
@@ -125,3 +125,4 @@ M.S. Business Analytics
 ---
 
 ⚠️ **Important Notice:** This model is designed for research and early intervention purposes. It should complement, not replace, professional mental health assessment and care.
+```
